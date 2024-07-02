@@ -65,6 +65,22 @@ const removeItems = () => {
   checkUI();
 };
 
+const filterItems = (e) => {
+  const items = itemList.querySelectorAll('li');
+  const text = e.target.value.toLowerCase();
+
+  items.forEach((item) => {
+    const itemName = item.firstChild.textContent.toLowerCase();
+
+    // Basically if the text content matches the value, display the li
+    if (itemName.indexOf(text) != -1) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
+
 // Check and show elements depending on item length
 const checkUI = () => {
   const items = itemList.querySelectorAll('li');
@@ -82,3 +98,4 @@ const checkUI = () => {
 itemForm.addEventListener('submit', addItem);
 itemList.addEventListener('click', removeItem);
 clearBtn.addEventListener('click', removeItems);
+itemFilter.addEventListener('input', filterItems);
