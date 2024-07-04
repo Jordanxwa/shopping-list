@@ -4,7 +4,15 @@ const itemList = document.querySelector('#item-list');
 const clearBtn = document.querySelector('#clear');
 const itemFilter = document.querySelector('#filter');
 
-const addItem = (e) => {
+const displayItems = () => {
+  const itemsFromStorage = getItemsFromStorage();
+
+  itemsFromStorage.forEach((item) => addItemToDOM(item));
+
+  checkUI();
+};
+
+const onAddItemSubmit = (e) => {
   e.preventDefault();
   const newItem = itemInput.value;
 
@@ -13,20 +21,30 @@ const addItem = (e) => {
     alert('Please Add An Item.');
     return;
   }
+
+  // Create item DOM elem
+  addItemToDOM(newItem);
+
+  // Add item to LS
+  addItemToStorage(newItem);
+
+  // Check to see if items can be shown
+  checkUI();
+
+  // Clear value after submission
+  itemInput.value = '';
+};
+
+const addItemToDOM = (item) => {
   // Create LI
   const li = document.createElement('li');
-  li.appendChild(document.createTextNode(newItem));
+  li.appendChild(document.createTextNode(item));
 
   const button = createButton('remove-item btn-link text-red');
 
   li.appendChild(button);
   // Add li to list (DOM)
   itemList.appendChild(li);
-  // Check to see if items can be shown
-  checkUI();
-
-  // Clear value after submission
-  itemInput.value = '';
 };
 
 // Create Button
@@ -45,15 +63,55 @@ const createIcon = (classes) => {
   return icon;
 };
 
-// Remove Item with event delegation
-const removeItem = (e) => {
-  if (e.target.parentElement.classList.contains('remove-item')) {
-    if (confirm('Are you sure?')) {
-      e.target.parentElement.parentElement.remove();
-      // Check to see if items can be shown
-      checkUI();
-    }
+const addItemToStorage = (item) => {
+  const itemsFromStorage = getItemsFromStorage();
+
+  // Add new item to array
+  itemsFromStorage.push(item);
+
+  // Convert to JSON string and set to LS
+  localStorage.setItem('items', JSON.stringify(itemsFromStorage));
+};
+
+const getItemsFromStorage = () => {
+  let itemsFromStorage;
+
+  if (localStorage.getItem('items') === null) {
+    itemsFromStorage = [];
+  } else {
+    itemsFromStorage = JSON.parse(localStorage.getItem('items'));
   }
+
+  return itemsFromStorage;
+};
+
+const onClickItem = (e) => {
+  if (e.target.parentElement.classList.contains('remove-item')) {
+    removeItem(e.target.parentElement.parentElement);
+  }
+};
+
+// Remove Item with event delegation
+const removeItem = (item) => {
+  if (confirm('Are you sure?')) {
+    // Remove item from DOM
+    item.remove();
+
+    // Remove item from storage
+    removeItemFromStorage(item.textContent);
+
+    checkUI();
+  }
+};
+
+const removeItemFromStorage = (item) => {
+  let itemsFromStorage = getItemsFromStorage();
+
+  // filter out item to be removed
+  itemsFromStorage = itemsFromStorage.filter((i) => i !== item);
+
+  // Reset to LS
+  localStorage.setItem('items', JSON.stringify(itemsFromStorage));
 };
 
 // Remove all list items
@@ -63,6 +121,9 @@ const removeItems = () => {
   }
   // Check to see if items can be shown
   checkUI();
+
+  // Remove from LS
+  localStorage.removeItem('items');
 };
 
 const filterItems = (e) => {
@@ -94,8 +155,16 @@ const checkUI = () => {
   }
 };
 
-// Event Listeners
-itemForm.addEventListener('submit', addItem);
-itemList.addEventListener('click', removeItem);
-clearBtn.addEventListener('click', removeItems);
-itemFilter.addEventListener('input', filterItems);
+// Init App
+const init = () => {
+  // Event Listeners
+  itemForm.addEventListener('submit', onAddItemSubmit);
+  itemList.addEventListener('click', onClickItem);
+  clearBtn.addEventListener('click', removeItems);
+  itemFilter.addEventListener('input', filterItems);
+  document.addEventListener('DOMContentLoaded', displayItems);
+
+  checkUI();
+};
+
+init();
