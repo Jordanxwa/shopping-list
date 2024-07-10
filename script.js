@@ -3,6 +3,8 @@ const itemInput = document.querySelector('#item-input');
 const itemList = document.querySelector('#item-list');
 const clearBtn = document.querySelector('#clear');
 const itemFilter = document.querySelector('#filter');
+const formBtn = itemForm.querySelector('button');
+let isEditMode = false;
 
 const displayItems = () => {
   const itemsFromStorage = getItemsFromStorage();
@@ -20,6 +22,21 @@ const onAddItemSubmit = (e) => {
   if (newItem === '') {
     alert('Please Add An Item.');
     return;
+  }
+
+  // Check for edit mode
+  if (isEditMode) {
+    const itemToEdit = itemList.querySelector('.edit-mode');
+
+    removeItemFromStorage(itemToEdit.textContent);
+    itemToEdit.classList.remove('edit-mode');
+    itemToEdit.remove();
+    isEditMode = false;
+  } else {
+    if (checkIfItemsExists(newItem)) {
+      alert('Item Already Exists');
+      return;
+    }
   }
 
   // Create item DOM elem
@@ -88,7 +105,36 @@ const getItemsFromStorage = () => {
 const onClickItem = (e) => {
   if (e.target.parentElement.classList.contains('remove-item')) {
     removeItem(e.target.parentElement.parentElement);
+  } else {
+    setItemToEdit(e.target);
   }
+};
+
+const checkIfItemsExists = (item) => {
+  const itemsFromStorage = getItemsFromStorage();
+
+  if (itemsFromStorage.includes(item)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const setItemToEdit = (item) => {
+  isEditMode = true;
+
+  // Remove grey color when clicking other li's
+  itemList
+    .querySelectorAll('li')
+    .forEach((i) => i.classList.remove('edit-mode'));
+
+  // Add style and  change btn text when target is clicked
+  item.classList.add('edit-mode');
+  formBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Update Item';
+
+  // Add BG color to btn and change value to clicked item
+  formBtn.style.backgroundColor = '#228B22';
+  itemInput.value = item.textContent;
 };
 
 // Remove Item with event delegation
@@ -104,6 +150,7 @@ const removeItem = (item) => {
   }
 };
 
+// Remove item from storage
 const removeItemFromStorage = (item) => {
   let itemsFromStorage = getItemsFromStorage();
 
@@ -153,6 +200,11 @@ const checkUI = () => {
     itemFilter.style.display = 'block';
     clearBtn.style.display = 'block';
   }
+
+  formBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
+  formBtn.style.backgroundColor = '#333';
+
+  isEditMode = false;
 };
 
 // Init App
